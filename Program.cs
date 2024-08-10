@@ -10,11 +10,11 @@ string chaveSecreta = "e3c46810-b96e-40d9-a9eb-9ffa7b373e5b";
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurações dos serviços
+// ConfiguraÃ§Ãµes dos serviÃ§os
 builder.Services.AddScoped<UsuarioServices>();
 builder.Services.AddScoped<CollaboratorServices>();
 
-// Adiciona serviços ao contêiner
+// Adiciona serviÃ§os ao contÃªiner
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -25,7 +25,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=System;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False"));
+    options.UseSqlServer("Server=tcp:system-manarge.database.windows.net,1433;Initial Catalog=system-manarge;Persist Security Info=False;User ID=manoela;Password=sistem1#};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"));
 
 builder.Services.AddAuthentication(options =>
 {
@@ -48,7 +48,7 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
-// Configura o pipeline de solicitações HTTP
+// Configura o pipeline de solicitaÃ§Ãµes HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
