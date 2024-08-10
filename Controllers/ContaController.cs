@@ -1,4 +1,6 @@
-﻿using CrudSystem.Models;
+﻿using CrudSystem.DTOs;
+using CrudSystem.Models;
+using CrudSystem.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -11,43 +13,51 @@ namespace CrudSystem.Controllers
     [ApiController]
     public class ContaController : ControllerBase
     {
-        [HttpPost]
-        public IActionResult Login([FromBody] LoginModel login)
+        private readonly UsuarioServices _usuarioServices;
+
+        public ContaController(UsuarioServices usuarioServices)
         {
-            if (login.Login == "admim" && login.Password == "admim")
-            {
-                var token = GerarTokenJWT();
-                return Ok(new { token });
-            }
-            return BadRequest(new { mensagem = "Credenciais invalidas. Por favor, verifique seu nome de usuario e senha" });
+            _usuarioServices = usuarioServices;
         }
 
-        private string GerarTokenJWT()
+        [HttpPost("login")]
+        public async Task<ActionResult<string>> Login([FromBody] LoginModel loginModel)
         {
-            string chaveSecreta = "e3c46810-b96e-40d9-a9eb-9ffa7b373e5b";
-            var chave = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(chaveSecreta));
-            var credencial = new SigningCredentials(chave, SecurityAlgorithms.HmacSha256);
+            var user = await _usuarioServices.BuscarPorUUIDUserNameESenha(loginModel.Login, loginModel.Password);
 
-            var claims = new[]
+            if (user == null)
             {
-                new Claim("login", "admim"),
-                new Claim("nome", "Administrados do sistema")
+                return Unauthorized(new { message = "Credenciais inválidas." });
+            }
+
+            var token = GerarTokenJWT(user);
+            return Ok(new { token });
+        }
+        private string GerarTokenJWT(User user)
+            {
+                string chaveSecreta = "e3c46810-b96e-40d9-a9eb-9ffa7b373e5b";
+                var chave = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(chaveSecreta));
+                var credencial = new SigningCredentials(chave, SecurityAlgorithms.HmacSha256);
+
+                var claims = new[]
+                {
+                new Claim("login", user.UUIDUserName),
+                new Claim("nome", user.UUIDUserName)
             };
 
-            var token = new JwtSecurityToken(
-                issuer: "sua_empresa",
-                audience: "sua_aplicacao",
-                claims: claims,
-                expires: DateTime.Now.AddHours(8),
-                signingCredentials: credencial
-            );
+                var token = new JwtSecurityToken(
+                    issuer: "system_tasks",
+                    audience: "seus_usuarios",
+                    claims: claims,
+                    expires: DateTime.Now.AddHours(8),
+                    signingCredentials: credencial
+                );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+                return new JwtSecurityTokenHandler().WriteToken(token);
+            }
 
-        }
     }
-
-
 }
+    
 
 

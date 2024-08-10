@@ -2,8 +2,12 @@
 using CrudSystem.DTOs;
 using CrudSystem.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace CrudSystem.Services
@@ -17,6 +21,25 @@ namespace CrudSystem.Services
             _dbContext = dbContext;
         }
 
+        public async Task<User> BuscarPorUUIDUserNameESenha(string uuidUserName, string password)
+        {
+            var user = await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.UUIDUserName == uuidUserName);
+
+            if (user != null && VerifyPassword(password, user.Password))
+            {
+                return user;
+            }
+
+            return null;
+        }
+
+        private bool VerifyPassword(string password, string hashedPassword)
+        {
+            var hashedInputPassword = HashPassword(password);
+            return hashedInputPassword == hashedPassword;
+        }
+
         public async Task<List<UserReadDTO>> BuscarTodosUsuarios()
         {
             var users = await _dbContext.Users.ToListAsync();
@@ -25,7 +48,7 @@ namespace CrudSystem.Services
             {
                 Id = user.Id,
                 UUIDUserName = user.UUIDUserName,
-                Password = user.Password
+                Password = "********"
             }).ToList();
 
             return userReadDTOs;
@@ -33,7 +56,6 @@ namespace CrudSystem.Services
 
         public async Task<User> Adicionar(UserDTO userDTO)
         {
-
             var existingUser = await _dbContext.Users
                 .FirstOrDefaultAsync(u => u.UUIDUserName == userDTO.UUIDUserName);
 
@@ -42,13 +64,14 @@ namespace CrudSystem.Services
                 throw new Exception("Usuário com esse UUIDUserName já existe.");
             }
 
+            var hashedPassword = HashPassword(userDTO.Password);
+
             var user = new User
             {
-                Id = Guid.NewGuid(), 
+                Id = Guid.NewGuid(),
                 UUIDUserName = userDTO.UUIDUserName,
-                Password = userDTO.Password,
+                Password = hashedPassword, 
                 CreatedAt = DateTime.UtcNow,
-
             };
 
             var collaborator = new Collaborator
@@ -67,6 +90,29 @@ namespace CrudSystem.Services
             return user;
         }
 
+        private string GerarTokenJWT(User user)
+        {
+            string chaveSecreta = "e3c46810-b96e-40d9-a9eb-9ffa7b373e5b"; 
+            var chave = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(chaveSecreta));
+            var credencial = new SigningCredentials(chave, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim("login", user.UUIDUserName),
+                new Claim("nome", user.UUIDUserName)
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: "system_tasks",
+                audience: "seus_usuarios",
+                claims: claims,
+                expires: DateTime.Now.AddHours(8),
+                signingCredentials: credencial
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
         public async Task<UserReadDTO> BuscarPorId(Guid id)
         {
             var user = await _dbContext.Users.FindAsync(id);
@@ -80,7 +126,7 @@ namespace CrudSystem.Services
             {
                 Id = user.Id,
                 UUIDUserName = user.UUIDUserName,
-                Password = user.Password
+                Password = "********"
             };
         }
 
@@ -92,9 +138,27 @@ namespace CrudSystem.Services
                 return false;
             }
 
+            var collaborator = await _dbContext.Collaborators
+                .FirstOrDefaultAsync(c => c.UserId == id);
+
+            if (collaborator != null)
+            {
+                _dbContext.Collaborators.Remove(collaborator);
+            }
+
             _dbContext.Users.Remove(user);
+
             await _dbContext.SaveChangesAsync();
             return true;
+        }
+
+        private string HashPassword(string password)
+        {
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashedBytes);
+            }
         }
     }
 }

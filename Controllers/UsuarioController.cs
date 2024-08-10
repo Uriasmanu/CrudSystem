@@ -26,7 +26,10 @@ namespace CrudSystem.Controllers
             try
             {
                 var user = await _usuarioServices.Adicionar(userDTO);
-                return CreatedAtAction(nameof(Adicionar), new { id = user.Id }, user);
+                return CreatedAtAction(nameof(Adicionar), new { id = user.Id }, new UserDTO
+                {
+                    UUIDUserName = user.UUIDUserName
+                });
             }
             catch (Exception ex) when (ex.Message == "Usuário com esse UUIDUserName já existe.")
             {
@@ -44,9 +47,9 @@ namespace CrudSystem.Controllers
             var users = await _usuarioServices.BuscarTodosUsuarios();
             var userReadDTOs = users.Select(u => new UserReadDTO
             {
-                Id = u.Id,  // Inclua o Id se necessário
-                UUIDUserName = u.UUIDUserName,
-                Password = u.Password
+                Id = u.Id,
+                UUIDUserName = u.UUIDUserName
+                // Não incluir a senha
             }).ToList();
 
             return Ok(userReadDTOs);
@@ -63,14 +66,12 @@ namespace CrudSystem.Controllers
 
             var userDTO = new UserDTO
             {
-                UUIDUserName = user.UUIDUserName,
-                Password = user.Password
+                UUIDUserName = user.UUIDUserName
+                // Não incluir a senha
             };
 
             return Ok(userDTO);
         }
-
-        
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Apagar(Guid id)

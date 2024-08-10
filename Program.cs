@@ -39,8 +39,8 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = "sua_empresa",
-        ValidAudience = "sua_aplicacao",
+        ValidIssuer = "system_tasks",
+        ValidAudience = "seus_usuarios",
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(chaveSecreta))
 
     };
