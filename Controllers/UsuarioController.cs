@@ -39,16 +39,17 @@ namespace CrudSystem.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<UserDTO>>> BuscarUsuarios()
+        public async Task<ActionResult<List<UserReadDTO>>> BuscarUsuarios()
         {
             var users = await _usuarioServices.BuscarTodosUsuarios();
-            var userDTOs = users.Select(u => new UserDTO
+            var userReadDTOs = users.Select(u => new UserReadDTO
             {
+                Id = u.Id,  // Inclua o Id se necessário
                 UUIDUserName = u.UUIDUserName,
                 Password = u.Password
             }).ToList();
 
-            return Ok(userDTOs);
+            return Ok(userReadDTOs);
         }
 
         [HttpGet("{id}")]

@@ -17,18 +17,23 @@ namespace CrudSystem.Services
             _dbContext = dbContext;
         }
 
-        public async Task<List<User>> BuscarTodosUsuarios()
+        public async Task<List<UserReadDTO>> BuscarTodosUsuarios()
         {
-            return await _dbContext.Users.ToListAsync();
-        }
+            var users = await _dbContext.Users.ToListAsync();
 
-        public async Task<User> BuscarPorId(Guid id)
-        {
-            return await _dbContext.Users.FindAsync(id);
+            var userReadDTOs = users.Select(user => new UserReadDTO
+            {
+                Id = user.Id,
+                UUIDUserName = user.UUIDUserName,
+                Password = user.Password
+            }).ToList();
+
+            return userReadDTOs;
         }
 
         public async Task<User> Adicionar(UserDTO userDTO)
         {
+
             var existingUser = await _dbContext.Users
                 .FirstOrDefaultAsync(u => u.UUIDUserName == userDTO.UUIDUserName);
 
@@ -39,10 +44,11 @@ namespace CrudSystem.Services
 
             var user = new User
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid(), 
                 UUIDUserName = userDTO.UUIDUserName,
                 Password = userDTO.Password,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+
             };
 
             var collaborator = new Collaborator
@@ -59,6 +65,23 @@ namespace CrudSystem.Services
             await _dbContext.SaveChangesAsync();
 
             return user;
+        }
+
+        public async Task<UserReadDTO> BuscarPorId(Guid id)
+        {
+            var user = await _dbContext.Users.FindAsync(id);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            return new UserReadDTO
+            {
+                Id = user.Id,
+                UUIDUserName = user.UUIDUserName,
+                Password = user.Password
+            };
         }
 
         public async Task<bool> Apagar(Guid id)
