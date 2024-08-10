@@ -1,7 +1,9 @@
 using CrudSystem.Data;
+using CrudSystem.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddScoped<UsuarioServices>();
 
 // Add services to the container.
 
