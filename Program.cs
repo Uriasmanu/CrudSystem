@@ -25,7 +25,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer("Server=tcp:system-manarge.database.windows.net,1433;Initial Catalog=system-manarge;Persist Security Info=False;User ID=manoela;Password=sistem1#};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"));
+    options.UseSqlServer("Server=tcp:manarger-serve.database.windows.net,1433;Initial Catalog=api-Db;Persist Security Info=False;User ID=manoela;Password=sistema1#;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"));
 
 builder.Services.AddAuthentication(options =>
 {
@@ -42,8 +42,19 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = "system_tasks",
         ValidAudience = "seus_usuarios",
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(chaveSecreta))
-
     };
+});
+
+// Configuração do CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
 });
 
 var app = builder.Build();
@@ -57,6 +68,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Adicione o middleware CORS
+app.UseCors("AllowSpecificOrigin");
+
+// Adicione o middleware de autenticação
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
