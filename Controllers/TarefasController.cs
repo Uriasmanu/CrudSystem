@@ -41,7 +41,7 @@ namespace CrudSystem.Controllers
     
 
 
-    // GET: api/Tarefa/5
+    // GET: api/Tarefa/
     [HttpGet("{id}")]
         public async Task<ActionResult<Tarefas>> GetTarefaById(Guid id)
         {
@@ -66,7 +66,7 @@ namespace CrudSystem.Controllers
                 
                 var response = new
                 {
-                    Id = createdTarefa.Id,
+
                     Name = createdTarefa.Name,
                     Descritiva = createdTarefa.Descritiva,
                     ProjectId = createdTarefa.ProjectId,
@@ -83,28 +83,36 @@ namespace CrudSystem.Controllers
             }
         }
 
-        // PUT: api/Tarefa/5
+        // PUT: api/Tarefa/
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTarefa(Guid id, Tarefas tarefa)
-        {
-            if (id != tarefa.Id)
+        public async Task<IActionResult> UpdateTarefa(Guid id, [FromBody] TarefaUpdateDTO tarefaUpdateDto)
             {
-                return BadRequest();
-            }
+                if (id == Guid.Empty || tarefaUpdateDto == null)
+                {
+                    return BadRequest();
+                }
 
-            try
+                try
+                {
+            var tarefa = new Tarefas
             {
-                await _tarefaService.UpdateTarefaAsync(tarefa);
+                Id = id,
+                Name = tarefaUpdateDto.Name,
+                Descritiva = tarefaUpdateDto.Descritiva,
+                ProjectId = tarefaUpdateDto.ProjectId
+            };
+
+            await _tarefaService.UpdateTarefaAsync(tarefa);
             }
             catch (ArgumentException)
             {
                 return NotFound();
-            }
+                }
 
             return NoContent();
         }
 
-        // DELETE: api/Tarefa/5
+        // DELETE: api/Tarefa/
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTarefa(Guid id)
         {
