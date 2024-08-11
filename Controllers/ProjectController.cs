@@ -35,7 +35,7 @@ namespace CrudSystem.Controllers
             return Ok(projects);
         }
 
-        // GET: api/Project/5
+        // GET: api/Project/
         [HttpGet("{id}")]
         public async Task<ActionResult<Project>> GetProjectById(Guid id)
         {
