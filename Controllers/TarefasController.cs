@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using CrudSystem.Models;
 using CrudSystem.Services;
+using CrudSystem.DTOs;
 
 namespace CrudSystem.Controllers
 {
@@ -11,23 +12,37 @@ namespace CrudSystem.Controllers
     [ApiController]
     public class TarefaController : ControllerBase
     {
-        private readonly ITarefaService _tarefaService;
+        private readonly TarefaService _tarefaService;
 
-        public TarefaController(ITarefaService tarefaService)
+        public TarefaController(TarefaService tarefaService)
         {
             _tarefaService = tarefaService;
         }
 
-        // GET: api/Tarefa
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Tarefas>>> GetAllTarefas()
+        public async Task<ActionResult<IEnumerable<TarefaDTO>>> GetAllTarefas()
         {
-            var tarefas = await _tarefaService.GetAllTarefasAsync();
-            return Ok(tarefas);
-        }
+            try
+            {
+                var tarefas = await _tarefaService.GetAllTarefasAsync();
 
-        // GET: api/Tarefa/5
-        [HttpGet("{id}")]
+                if (tarefas == null || !tarefas.Any())
+                {
+                    return NotFound(new { mensagem = "Nenhuma tarefa encontrada." });
+                }
+
+                return Ok(tarefas);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensagem = "Ocorreu um erro ao tentar obter as tarefas.", erro = ex.Message });
+            }
+        }
+    
+
+
+    // GET: api/Tarefa/5
+    [HttpGet("{id}")]
         public async Task<ActionResult<Tarefas>> GetTarefaById(Guid id)
         {
             var tarefa = await _tarefaService.GetTarefaByIdAsync(id);
@@ -42,10 +57,30 @@ namespace CrudSystem.Controllers
 
         // POST: api/Tarefa
         [HttpPost]
-        public async Task<ActionResult<Tarefas>> CreateTarefa(Tarefas tarefa)
+        public async Task<ActionResult<Tarefas>> CreateTarefa(TarefaDTO tarefaDTO)
         {
-            var createdTarefa = await _tarefaService.CreateTarefaAsync(tarefa);
-            return CreatedAtAction(nameof(GetTarefaById), new { id = createdTarefa.Id }, createdTarefa);
+            try
+            {
+                var createdTarefa = await _tarefaService.CreateTarefaAsync(tarefaDTO);
+
+                
+                var response = new
+                {
+                    Id = createdTarefa.Id,
+                    Name = createdTarefa.Name,
+                    Descritiva = createdTarefa.Descritiva,
+                    ProjectId = createdTarefa.ProjectId,
+                    CreatedAt = createdTarefa.CreatedAt,
+
+                };
+
+                return CreatedAtAction(nameof(GetTarefaById), new { id = createdTarefa.Id }, response);
+            }
+            catch (ArgumentException ex)
+            {
+                // Retorna uma resposta com uma mensagem de erro clara
+                return BadRequest(new { mensagem = ex.Message });
+            }
         }
 
         // PUT: api/Tarefa/5

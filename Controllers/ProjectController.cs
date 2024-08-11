@@ -57,7 +57,7 @@ namespace CrudSystem.Controllers
 
             var response = new Project
             {
-                Id = createdProject.Id,
+
                 Name = createdProject.Name,
                 CreatedAt = createdProject.CreatedAt
             };

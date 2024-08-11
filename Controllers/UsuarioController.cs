@@ -31,7 +31,7 @@ namespace CrudSystem.Controllers
                     UUIDUserName = user.UUIDUserName
                 });
             }
-            catch (Exception ex) when (ex.Message == "Usuário com esse UUIDUserName já existe.")
+            catch (Exception ex) when (ex.Message == "Usuário com esse UserName já existe.")
             {
                 return Conflict(new { message = ex.Message }); // Retorna 409 Conflict
             }
@@ -49,7 +49,7 @@ namespace CrudSystem.Controllers
             {
                 Id = u.Id,
                 UUIDUserName = u.UUIDUserName
-                // Não incluir a senha
+
             }).ToList();
 
             return Ok(userReadDTOs);
@@ -67,7 +67,7 @@ namespace CrudSystem.Controllers
             var userDTO = new UserDTO
             {
                 UUIDUserName = user.UUIDUserName
-                // Não incluir a senha
+
             };
 
             return Ok(userDTO);

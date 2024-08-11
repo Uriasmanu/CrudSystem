@@ -9,16 +9,8 @@ using CrudSystem.DTOs;
 
 namespace CrudSystem.Services
 {
-    public interface ITarefaService
-    {
-        Task<Tarefas> GetTarefaByIdAsync(Guid id);
-        Task<IEnumerable<Tarefas>> GetAllTarefasAsync();
-        Task<Tarefas> CreateTarefaAsync(Tarefas tarefa);
-        Task UpdateTarefaAsync(Tarefas tarefa);
-        Task DeleteTarefaAsync(Guid id);
-    }
 
-    public class TarefaService : ITarefaService
+    public class TarefaService 
     {
         private readonly ApplicationDbContext _context;
 
@@ -34,33 +26,60 @@ namespace CrudSystem.Services
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 
-        public async Task<IEnumerable<Tarefas>> GetAllTarefasAsync()
+        public async Task<IEnumerable<TarefaDTO>> GetAllTarefasAsync()
         {
             return await _context.Tarefas
                 .Include(t => t.Project)
+                .Select(t => new TarefaDTO
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    Descritiva = t.Descritiva,
+                    ProjectId = t.ProjectId,
+                    CreatedAt = t.CreatedAt
+                })
                 .ToListAsync();
         }
 
-        public async Task<Tarefas> CreateTarefaAsync(Tarefas tarefa)
+        public async Task<Tarefas> CreateTarefaAsync(TarefaDTO tarefaDTO)
         {
-            var projetoExiste = await _context.Tarefas
-                .FirstOrDefaultAsync(u => u.Name == tarefa.Name);
+            // Verifica se já existe uma tarefa com o mesmo nome
+            var tarefaExiste = await _context.Tarefas
+                .FirstOrDefaultAsync(t => t.Name == tarefaDTO.Name);
 
-            if (projetoExiste != null)
+            if (tarefaExiste != null)
             {
                 throw new ArgumentException("Já existe uma tarefa com esse nome.");
-
             }
 
-            tarefa.Id = Guid.NewGuid(); 
-            tarefa.CreatedAt = DateTime.UtcNow;
-            tarefa.UpdatedAt = DateTime.UtcNow;
+            // Verifica se o projeto associado existe
+            var projetoExiste = await _context.Projects
+                .FindAsync(tarefaDTO.ProjectId);
 
-            _context.Tarefas.Add(tarefa);
+            if (projetoExiste == null)
+            {
+                throw new ArgumentException("Projeto associado não encontrado.");
+            }
+
+            // Cria uma nova tarefa
+            var novaTarefa = new Tarefas
+            {
+                Id = Guid.NewGuid(),
+                Name = tarefaDTO.Name,
+                Descritiva = tarefaDTO.Descritiva,
+                ProjectId = tarefaDTO.ProjectId, // Usando ProjectId
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // Adiciona e salva a nova tarefa no contexto
+            _context.Tarefas.Add(novaTarefa);
             await _context.SaveChangesAsync();
 
-            return tarefa;
+            return novaTarefa;
         }
+
+
+
 
         public async Task UpdateTarefaAsync(Tarefas tarefa)
         {
@@ -69,7 +88,6 @@ namespace CrudSystem.Services
 
             existingTarefa.Name = tarefa.Name;
             existingTarefa.Descritiva = tarefa.Descritiva;
-            existingTarefa.ProjectId = tarefa.ProjectId;
             existingTarefa.UpdatedAt = DateTime.UtcNow;
 
             _context.Tarefas.Update(existingTarefa);
