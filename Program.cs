@@ -13,6 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Configurações dos serviços
 builder.Services.AddScoped<UsuarioServices>();
 builder.Services.AddScoped<CollaboratorServices>();
+builder.Services.AddScoped<TarefaService>();
+builder.Services.AddScoped<ProjectService>();
+
 
 // Adiciona serviços ao contêiner
 builder.Services.AddControllers()

@@ -29,6 +29,6 @@ namespace CrudSystem.Controllers
             return Ok(collaboratorDTO);
         }
 
-        
+
     }
 }
