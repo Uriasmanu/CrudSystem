@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using CrudSystem.Models;
 using CrudSystem.Services;
+using CrudSystem.DTOs;
 
 namespace CrudSystem.Controllers
 {
@@ -18,11 +19,19 @@ namespace CrudSystem.Controllers
             _projectService = projectService;
         }
 
-        // GET: api/Project
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Project>>> GetAllProjects()
+        // GET: api/Project/Active
+        [HttpGet("Active")]
+        public async Task<ActionResult<IEnumerable<Project>>> GetActiveProjects()
         {
-            var projects = await _projectService.GetAllProjectsAsync();
+            var projects = await _projectService.GetActiveProjectsAsync();
+            return Ok(projects);
+        }
+
+        // GET: api/Project/Deleted
+        [HttpGet("Deleted")]
+        public async Task<ActionResult<IEnumerable<Project>>> GetDeletedProjects()
+        {
+            var projects = await _projectService.GetDeletedProjectsAsync();
             return Ok(projects);
         }
 
@@ -42,10 +51,18 @@ namespace CrudSystem.Controllers
 
         // POST: api/Project
         [HttpPost]
-        public async Task<ActionResult<Project>> CreateProject(Project project)
+        public async Task<ActionResult<Project>> CreateProject(ProjetoDTO projectDTO)
         {
-            var createdProject = await _projectService.CreateProjectAsync(project);
-            return CreatedAtAction(nameof(GetProjectById), new { id = createdProject.Id }, createdProject);
+            var createdProject = await _projectService.CreateProjectAsync(projectDTO);
+
+            var response = new Project
+            {
+                Id = createdProject.Id,
+                Name = createdProject.Name,
+                CreatedAt = createdProject.CreatedAt
+            };
+
+            return CreatedAtAction(nameof(GetProjectById), new { id = createdProject.Id }, response);
         }
 
         // PUT: api/Project/5

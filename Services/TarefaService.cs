@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using CrudSystem.Data;
 using CrudSystem.Models;
+using CrudSystem.DTOs;
 
 namespace CrudSystem.Services
 {
@@ -42,7 +43,16 @@ namespace CrudSystem.Services
 
         public async Task<Tarefas> CreateTarefaAsync(Tarefas tarefa)
         {
-            tarefa.Id = Guid.NewGuid(); // Gera um novo Id
+            var projetoExiste = await _context.Tarefas
+                .FirstOrDefaultAsync(u => u.Name == tarefa.Name);
+
+            if (projetoExiste != null)
+            {
+                throw new ArgumentException("Já existe uma tarefa com esse nome.");
+
+            }
+
+            tarefa.Id = Guid.NewGuid(); 
             tarefa.CreatedAt = DateTime.UtcNow;
             tarefa.UpdatedAt = DateTime.UtcNow;
 

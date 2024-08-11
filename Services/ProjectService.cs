@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using CrudSystem.Data;
 using CrudSystem.Models;
+using CrudSystem.DTOs;
 
 namespace CrudSystem.Services
 {
@@ -22,16 +24,38 @@ namespace CrudSystem.Services
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task<IEnumerable<Project>> GetAllProjectsAsync()
+        // Retorna todos os projetos ativos (DeletedAt é nulo)
+        public async Task<IEnumerable<Project>> GetActiveProjectsAsync()
         {
-            return await _context.Projects.ToListAsync();
+            return await _context.Projects
+                .Where(p => p.DeletedAt == null)
+                .ToListAsync();
         }
 
-        public async Task<Project> CreateProjectAsync(Project project)
+        // Retorna todos os projetos deletados (DeletedAt não é nulo)
+        public async Task<IEnumerable<Project>> GetDeletedProjectsAsync()
         {
-            project.Id = Guid.NewGuid(); // Gera um novo Id
-            project.CreatedAt = DateTime.UtcNow;
-            project.UpdatedAt = DateTime.UtcNow;
+            return await _context.Projects
+                .Where(p => p.DeletedAt != null)
+                .ToListAsync();
+        }
+
+        public async Task<Project> CreateProjectAsync(ProjetoDTO projetoDTO)
+        {
+            var projetoExiste = await _context.Projects
+                .FirstOrDefaultAsync(u => u.Name == projetoDTO.Name);
+
+            if (projetoExiste != null)
+            {
+                throw new ArgumentException("Já existe um projeto com esse nome.");
+            }
+
+            var project = new Project
+            {
+                Id = Guid.NewGuid(),
+                Name = projetoDTO.Name,
+                CreatedAt = DateTime.UtcNow,
+            };
 
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
