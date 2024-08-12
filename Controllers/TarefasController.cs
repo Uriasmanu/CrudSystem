@@ -85,29 +85,41 @@ namespace CrudSystem.Controllers
 
         // PUT: api/Tarefa/
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTarefa(Guid id, [FromBody] TarefaUpdateDTO tarefaUpdateDto)
+        public async Task<IActionResult> UpdateTarefa(Guid id, [FromBody] TarefaDTO tarefaDto)
+        {
+            if (id == Guid.Empty || tarefaDto == null)
             {
-                if (id == Guid.Empty || tarefaUpdateDto == null)
-                {
-                    return BadRequest();
-                }
-
-                try
-                {
-            var tarefa = new Tarefas
-            {
-                Id = id,
-                Name = tarefaUpdateDto.Name,
-                Descritiva = tarefaUpdateDto.Descritiva,
-                ProjectId = tarefaUpdateDto.ProjectId
-            };
-
-            await _tarefaService.UpdateTarefaAsync(tarefa);
+                return BadRequest("Invalid request data.");
             }
-            catch (ArgumentException)
+
+            try
             {
-                return NotFound();
+   
+                var existingTarefa = await _tarefaService.GetTarefaByIdAsync(id);
+                if (existingTarefa == null)
+                {
+                    return NotFound("Tarefa não encontrada.");
                 }
+
+
+                var newStatus = tarefaDto.Status; 
+
+                var tarefa = new Tarefas
+                {
+                    Id = id,
+                    Name = tarefaDto.Name,
+                    Descritiva = tarefaDto.Descritiva,
+                    ProjectId = tarefaDto.ProjectId
+
+                };
+
+                await _tarefaService.UpdateTarefaAsync(tarefa, newStatus);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(500, "Internal server error.");
+            }
 
             return NoContent();
         }

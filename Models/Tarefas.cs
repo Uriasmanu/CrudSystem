@@ -18,4 +18,14 @@ namespace CrudSystem.Models
         public Collaborator? Collaborator { get; set; }
         public Guid? CollaboratorId { get; set; }
     }
+
+    public enum Status
+    {
+        WaitingForActivation = 0,
+        WaitingToRun = 1,
+        Running = 2,
+        CompletedSuccessfully = 3,
+        Faulted = 4,
+        Canceled = 5
+    }
 }

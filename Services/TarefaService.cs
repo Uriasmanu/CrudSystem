@@ -36,7 +36,8 @@ namespace CrudSystem.Services
                     Name = t.Name,
                     Descritiva = t.Descritiva,
                     ProjectId = t.ProjectId,
-                    CreatedAt = t.CreatedAt
+                    CreatedAt = t.CreatedAt,
+                    Status = t.Status,
                 })
                 .ToListAsync();
         }
@@ -67,7 +68,7 @@ namespace CrudSystem.Services
                 Id = Guid.NewGuid(),
                 Name = tarefaDTO.Name,
                 Descritiva = tarefaDTO.Descritiva,
-                ProjectId = tarefaDTO.ProjectId, // Usando ProjectId
+                ProjectId = tarefaDTO.ProjectId, 
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -79,19 +80,21 @@ namespace CrudSystem.Services
         }
 
 
-        public async Task UpdateTarefaAsync(Tarefas tarefa)
+        public async Task UpdateTarefaAsync(Tarefas tarefa, TaskStatus newStatus)
         {
             var existingTarefa = await _context.Tarefas.FindAsync(tarefa.Id);
             if (existingTarefa == null) throw new ArgumentException("Tarefa não encontrada");
 
             existingTarefa.Name = tarefa.Name;
             existingTarefa.Descritiva = tarefa.Descritiva;
-            existingTarefa.ProjectId = tarefa.ProjectId; 
+            existingTarefa.ProjectId = tarefa.ProjectId;
+            existingTarefa.Status = newStatus;
             existingTarefa.UpdatedAt = DateTime.UtcNow;
 
             _context.Tarefas.Update(existingTarefa);
             await _context.SaveChangesAsync();
         }
+
 
         public async Task DeleteTarefaAsync(Guid id)
         {
