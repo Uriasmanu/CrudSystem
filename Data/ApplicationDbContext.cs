@@ -36,40 +36,52 @@ namespace CrudSystem.Data
             modelBuilder.Entity<User>()
                 .HasOne(u => u.Collaborator)
                 .WithOne(c => c.User)
-                .HasForeignKey<Collaborator>(c => c.UserId);
+                .HasForeignKey<Collaborator>(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict); // Evita exclusão em cascata
 
-            // Configurando a relação Project -> Collaborator
-            modelBuilder.Entity<Project>()
-                .HasMany(p => p.Collaborators)
-                .WithMany(c => c.Projects)
-                .UsingEntity<Dictionary<string, object>>(
-                    "ProjectCollaborator",
-                    j => j.HasOne<Collaborator>().WithMany().HasForeignKey("CollaboratorId"),
-                    j => j.HasOne<Project>().WithMany().HasForeignKey("ProjectId"));
+            // Configurando a relação Project -> Collaborator usando a entidade de junção
+            modelBuilder.Entity<ProjectCollaborator>()
+                .HasKey(pc => new { pc.ProjectId, pc.CollaboratorId });
+
+            modelBuilder.Entity<ProjectCollaborator>()
+                .HasOne(pc => pc.Project)
+                .WithMany(p => p.ProjectCollaborators)
+                .HasForeignKey(pc => pc.ProjectId);
+
+            modelBuilder.Entity<ProjectCollaborator>()
+                .HasOne(pc => pc.Collaborator)
+                .WithMany(c => c.ProjectCollaborators)
+                .HasForeignKey(pc => pc.CollaboratorId);
 
             // Configurando a relação Tarefas -> Collaborator
             modelBuilder.Entity<Tarefas>()
                 .HasOne(t => t.Collaborator)
                 .WithMany(c => c.Tarefas)
-                .HasForeignKey(t => t.CollaboratorId);
+                .HasForeignKey(t => t.CollaboratorId)
+                .OnDelete(DeleteBehavior.Restrict); // Evita exclusão em cascata
 
             // Configurando a relação Tarefas -> Project
             modelBuilder.Entity<Tarefas>()
                 .HasOne(t => t.Project)
                 .WithMany(p => p.Tarefas)
-                .HasForeignKey(t => t.ProjectId);
+                .HasForeignKey(t => t.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict); // Evita exclusão em cascata
 
             // Configurando a relação TimeTracker -> Tarefas
             modelBuilder.Entity<TimeTracker>()
                 .HasOne(tt => tt.Tarefas)
                 .WithMany(t => t.TimeTrackers)
-                .HasForeignKey(tt => tt.TarefasId);
+                .HasForeignKey(tt => tt.TarefasId)
+                .OnDelete(DeleteBehavior.Restrict); // Evita exclusão em cascata
 
             // Configurando a relação TimeTracker -> Collaborator
             modelBuilder.Entity<TimeTracker>()
                 .HasOne(tt => tt.Collaborator)
                 .WithMany(c => c.TimeTrackers)
-                .HasForeignKey(tt => tt.CollaboratorId);
+                .HasForeignKey(tt => tt.CollaboratorId)
+                .OnDelete(DeleteBehavior.Restrict); // Evita exclusão em cascata
         }
+
+
     }
 }

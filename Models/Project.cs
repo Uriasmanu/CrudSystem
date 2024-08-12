@@ -21,6 +21,6 @@ namespace CrudSystem.Models
 
         public ICollection<Tarefas> Tarefas { get; set; }
 
-        public ICollection<Collaborator> Collaborators { get; set; }
+        public ICollection<ProjectCollaborator> ProjectCollaborators { get; set; }
     }
 }

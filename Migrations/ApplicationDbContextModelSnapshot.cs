@@ -38,18 +38,13 @@ namespace CrudSystem.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("ProjectId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ProjectId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -87,10 +82,28 @@ namespace CrudSystem.Migrations
                     b.ToTable("Projects");
                 });
 
+            modelBuilder.Entity("CrudSystem.Models.ProjectCollaborator", b =>
+                {
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CollaboratorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ProjectId", "CollaboratorId");
+
+                    b.HasIndex("CollaboratorId");
+
+                    b.ToTable("ProjectCollaborator");
+                });
+
             modelBuilder.Entity("CrudSystem.Models.Tarefas", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CollaboratorId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -110,9 +123,6 @@ namespace CrudSystem.Migrations
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ProjectId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -121,9 +131,9 @@ namespace CrudSystem.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
+                    b.HasIndex("CollaboratorId");
 
-                    b.HasIndex("ProjectId1");
+                    b.HasIndex("ProjectId");
 
                     b.ToTable("Tarefas");
                 });
@@ -152,9 +162,6 @@ namespace CrudSystem.Migrations
                     b.Property<Guid>("TarefasId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("TarefasId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("TimeZoneId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -170,8 +177,6 @@ namespace CrudSystem.Migrations
                     b.HasIndex("CollaboratorId");
 
                     b.HasIndex("TarefasId");
-
-                    b.HasIndex("TarefasId1");
 
                     b.HasIndex("UserId");
 
@@ -211,30 +216,48 @@ namespace CrudSystem.Migrations
 
             modelBuilder.Entity("CrudSystem.Models.Collaborator", b =>
                 {
-                    b.HasOne("CrudSystem.Models.Project", null)
-                        .WithMany("Collaborators")
-                        .HasForeignKey("ProjectId");
-
                     b.HasOne("CrudSystem.Models.User", "User")
                         .WithOne("Collaborator")
                         .HasForeignKey("CrudSystem.Models.Collaborator", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("CrudSystem.Models.Tarefas", b =>
+            modelBuilder.Entity("CrudSystem.Models.ProjectCollaborator", b =>
                 {
+                    b.HasOne("CrudSystem.Models.Collaborator", "Collaborator")
+                        .WithMany("ProjectCollaborators")
+                        .HasForeignKey("CollaboratorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("CrudSystem.Models.Project", "Project")
-                        .WithMany()
+                        .WithMany("ProjectCollaborators")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CrudSystem.Models.Project", null)
+                    b.Navigation("Collaborator");
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("CrudSystem.Models.Tarefas", b =>
+                {
+                    b.HasOne("CrudSystem.Models.Collaborator", "Collaborator")
                         .WithMany("Tarefas")
-                        .HasForeignKey("ProjectId1");
+                        .HasForeignKey("CollaboratorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CrudSystem.Models.Project", "Project")
+                        .WithMany("Tarefas")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Collaborator");
 
                     b.Navigation("Project");
                 });
@@ -242,20 +265,16 @@ namespace CrudSystem.Migrations
             modelBuilder.Entity("CrudSystem.Models.TimeTracker", b =>
                 {
                     b.HasOne("CrudSystem.Models.Collaborator", "Collaborator")
-                        .WithMany()
+                        .WithMany("TimeTrackers")
                         .HasForeignKey("CollaboratorId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("CrudSystem.Models.Tarefas", "Tarefas")
-                        .WithMany()
-                        .HasForeignKey("TarefasId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CrudSystem.Models.Tarefas", null)
                         .WithMany("TimeTrackers")
-                        .HasForeignKey("TarefasId1");
+                        .HasForeignKey("TarefasId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("CrudSystem.Models.User", "User")
                         .WithMany()
@@ -270,9 +289,18 @@ namespace CrudSystem.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("CrudSystem.Models.Collaborator", b =>
+                {
+                    b.Navigation("ProjectCollaborators");
+
+                    b.Navigation("Tarefas");
+
+                    b.Navigation("TimeTrackers");
+                });
+
             modelBuilder.Entity("CrudSystem.Models.Project", b =>
                 {
-                    b.Navigation("Collaborators");
+                    b.Navigation("ProjectCollaborators");
 
                     b.Navigation("Tarefas");
                 });

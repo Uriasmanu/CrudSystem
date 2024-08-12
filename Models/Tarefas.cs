@@ -15,7 +15,7 @@ namespace CrudSystem.Models
         public DateTime? DeletedAt { get; set; }
 
         public ICollection<TimeTracker> TimeTrackers { get; set; }
-        public Collaborator Collaborator { get; set; }
-        public Guid CollaboratorId { get; set; }
+        public Collaborator? Collaborator { get; set; }
+        public Guid? CollaboratorId { get; set; }
     }
 }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CrudSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240810023528_Inicial")]
-    partial class Inicial
+    [Migration("20240812154856_Atualizacao")]
+    partial class Atualizacao
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -41,7 +41,7 @@ namespace CrudSystem.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid>("UserId")
@@ -67,11 +67,17 @@ namespace CrudSystem.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
@@ -79,10 +85,28 @@ namespace CrudSystem.Migrations
                     b.ToTable("Projects");
                 });
 
+            modelBuilder.Entity("CrudSystem.Models.ProjectCollaborator", b =>
+                {
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CollaboratorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ProjectId", "CollaboratorId");
+
+                    b.HasIndex("CollaboratorId");
+
+                    b.ToTable("ProjectCollaborator");
+                });
+
             modelBuilder.Entity("CrudSystem.Models.Tarefas", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CollaboratorId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -102,10 +126,15 @@ namespace CrudSystem.Migrations
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CollaboratorId");
 
                     b.HasIndex("ProjectId");
 
@@ -127,10 +156,10 @@ namespace CrudSystem.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime>("EndTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("StartDate")
+                    b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid>("TarefasId")
@@ -143,11 +172,16 @@ namespace CrudSystem.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CollaboratorId");
 
                     b.HasIndex("TarefasId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("TimeTrackers");
                 });
@@ -188,19 +222,45 @@ namespace CrudSystem.Migrations
                     b.HasOne("CrudSystem.Models.User", "User")
                         .WithOne("Collaborator")
                         .HasForeignKey("CrudSystem.Models.Collaborator", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("CrudSystem.Models.Tarefas", b =>
+            modelBuilder.Entity("CrudSystem.Models.ProjectCollaborator", b =>
                 {
+                    b.HasOne("CrudSystem.Models.Collaborator", "Collaborator")
+                        .WithMany("ProjectCollaborators")
+                        .HasForeignKey("CollaboratorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("CrudSystem.Models.Project", "Project")
-                        .WithMany()
+                        .WithMany("ProjectCollaborators")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Collaborator");
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("CrudSystem.Models.Tarefas", b =>
+                {
+                    b.HasOne("CrudSystem.Models.Collaborator", "Collaborator")
+                        .WithMany("Tarefas")
+                        .HasForeignKey("CollaboratorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CrudSystem.Models.Project", "Project")
+                        .WithMany("Tarefas")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Collaborator");
 
                     b.Navigation("Project");
                 });
@@ -208,20 +268,49 @@ namespace CrudSystem.Migrations
             modelBuilder.Entity("CrudSystem.Models.TimeTracker", b =>
                 {
                     b.HasOne("CrudSystem.Models.Collaborator", "Collaborator")
-                        .WithMany()
+                        .WithMany("TimeTrackers")
                         .HasForeignKey("CollaboratorId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("CrudSystem.Models.Tarefas", "Tarefas")
-                        .WithMany()
+                        .WithMany("TimeTrackers")
                         .HasForeignKey("TarefasId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CrudSystem.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Collaborator");
 
                     b.Navigation("Tarefas");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CrudSystem.Models.Collaborator", b =>
+                {
+                    b.Navigation("ProjectCollaborators");
+
+                    b.Navigation("Tarefas");
+
+                    b.Navigation("TimeTrackers");
+                });
+
+            modelBuilder.Entity("CrudSystem.Models.Project", b =>
+                {
+                    b.Navigation("ProjectCollaborators");
+
+                    b.Navigation("Tarefas");
+                });
+
+            modelBuilder.Entity("CrudSystem.Models.Tarefas", b =>
+                {
+                    b.Navigation("TimeTrackers");
                 });
 
             modelBuilder.Entity("CrudSystem.Models.User", b =>
