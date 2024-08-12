@@ -12,7 +12,7 @@ namespace CrudSystem.Models
         public string Name { get; set; }
 
         [StringLength(500)]
-        public string Description { get; set; }
+        public string Descricao { get; set; }
 
         [Required]
         public DateTime CreatedAt { get; set; }

@@ -54,6 +54,7 @@ namespace CrudSystem.Services
             {
                 Id = Guid.NewGuid(),
                 Name = projetoDTO.Name,
+                Descricao = projetoDTO.Descricao,
                 CreatedAt = DateTime.UtcNow,
             };
 

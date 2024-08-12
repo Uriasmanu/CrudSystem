@@ -32,5 +32,7 @@ namespace CrudSystem.Models
 
             return EndTime - StartTime;
         }
+
+
     }
 }

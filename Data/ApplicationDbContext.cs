@@ -28,6 +28,7 @@ namespace CrudSystem.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Configurando a relação User -> Collaborator
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.UUIDUserName)
                 .IsUnique();
@@ -37,22 +38,37 @@ namespace CrudSystem.Data
                 .WithOne(c => c.User)
                 .HasForeignKey<Collaborator>(c => c.UserId);
 
-            modelBuilder.Entity<Tarefas>()
-                .HasKey(t => t.Id);
+            // Configurando a relação Project -> Collaborator
+            modelBuilder.Entity<Project>()
+                .HasMany(p => p.Collaborators)
+                .WithMany(c => c.Projects)
+                .UsingEntity<Dictionary<string, object>>(
+                    "ProjectCollaborator",
+                    j => j.HasOne<Collaborator>().WithMany().HasForeignKey("CollaboratorId"),
+                    j => j.HasOne<Project>().WithMany().HasForeignKey("ProjectId"));
 
+            // Configurando a relação Tarefas -> Collaborator
+            modelBuilder.Entity<Tarefas>()
+                .HasOne(t => t.Collaborator)
+                .WithMany(c => c.Tarefas)
+                .HasForeignKey(t => t.CollaboratorId);
+
+            // Configurando a relação Tarefas -> Project
             modelBuilder.Entity<Tarefas>()
                 .HasOne(t => t.Project)
-                .WithMany()
+                .WithMany(p => p.Tarefas)
                 .HasForeignKey(t => t.ProjectId);
 
+            // Configurando a relação TimeTracker -> Tarefas
             modelBuilder.Entity<TimeTracker>()
                 .HasOne(tt => tt.Tarefas)
-                .WithMany()
+                .WithMany(t => t.TimeTrackers)
                 .HasForeignKey(tt => tt.TarefasId);
 
+            // Configurando a relação TimeTracker -> Collaborator
             modelBuilder.Entity<TimeTracker>()
                 .HasOne(tt => tt.Collaborator)
-                .WithMany()
+                .WithMany(c => c.TimeTrackers)
                 .HasForeignKey(tt => tt.CollaboratorId);
         }
     }
