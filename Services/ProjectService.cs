@@ -24,15 +24,16 @@ namespace CrudSystem.Services
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        // Retorna todos os projetos ativos (DeletedAt é nulo)
+       
         public async Task<IEnumerable<Project>> GetActiveProjectsAsync()
         {
             return await _context.Projects
                 .Where(p => p.DeletedAt == null)
+                .Include(p => p.Tarefas)
                 .ToListAsync();
         }
 
-        // Retorna todos os projetos deletados (DeletedAt não é nulo)
+        
         public async Task<IEnumerable<Project>> GetDeletedProjectsAsync()
         {
             return await _context.Projects
